@@ -1,91 +1,113 @@
 #include "binary_trees.h"
 /**
- * binary_tree_leaves - function that counts the leaves in a binary tree
- * @tree: is a pointer to the root node of the tree
- * to count the number of leaves
- * Return: tree is NULL, the function must return 0
+ * new_node - This creates a new node in a linked list
+ * @node: Its a pointer type node to be created
+ * Return: node created
  */
-size_t binary_tree_leaves(const binary_tree_t *tree)
+link_t *new_node(binary_tree_t *node)
 {
-if (tree == NULL)
-return (0);
-if (tree->left == NULL && tree->right == NULL)
-return (1);
-return (0);
+	link_t *new;
+
+	new = malloc(sizeof(link_t));
+	if (new == NULL)
+	{
+		return (NULL);
+	}
+	new->node = node;
+	new->next = NULL;
+
+	return (new);
 }
 /**
- * push - subroutine to push new nodes from traversal onto fifo queue
- * @head: pointer to head of fifo
- * @tail: pointer to tail of fifo
- * @node: node to add to queue
+ * free_q - It frees a node at a linked list
+ * @head: Node of linked list
  */
-void push(fifo_t **head, fifo_t **tail, const binary_tree_t *node)
+void free_q(link_t *head)
 {
-fifo_t *new;
-if (head == NULL || node == NULL)
-return;
-new = malloc(sizeof(fifo_t));
-if (new == NULL)
-return;
-new->node = node;
-new->next = *head;
-new->prev = NULL;
-if (*head == NULL)
-*tail = new;
-else
-(*head)->prev = new;
-*head = new;
+	link_t *tmp_node;
+
+	while (head)
+	{
+		tmp_node = head->next;
+		free(head);
+		head = tmp_node;
+	}
 }
 /**
- * pop - subroutine to pop nodes from the tail of a fifo queue
- * @head: pointer to head of queue
- * @tail: pointer to tail of queue
- *
- * Return: pointer to popped node, or NULL if it does not exist
+ * _push - It pushes a node into the stack
+ * @node: type pointer of the node of the tree
+ * @headhead node in the stack
+ * @tail: tail node in the stack
  */
-const binary_tree_t *pop(fifo_t **head, fifo_t **tail)
+void _push(binary_tree_t *node, link_t *head, link_t **tail)
 {
-fifo_t *last;
-binary_tree_t *node;
-if (tail == NULL || *tail == NULL)
-return (NULL);
-last = *tail;
-*tail = (*tail)->prev;
-if (*tail == NULL)
-*head = NULL;
-else
-(*tail)->next = NULL;
-node = (binary_tree_t *) last->node;
-free(last);
-return ((const binary_tree_t *) node);
+	link_t *new;
+
+	new = new_node(node);
+	if (new == NULL)
+	{
+		free_q(head);
+		exit(1);
+	}
+	(*tail)->next = new;
+	*tail = new;
 }
 /**
- * binary_tree_is_complete - function that checks
- * if a binary tree is complete
- * @tree: is a pointer to the root node of the tree to check
- * Return: If tree is NULL, your function must return 0
+ * _pop - It pos a node into the stack
+ * @head: The head node in the stack
+ */
+void _pop(link_t **head)
+{
+	link_t *tmp_node;
+
+	tmp_node = (*head)->next;
+	free(*head);
+	*head = tmp_node;
+}
+/**
+ * binary_tree_is_complete - It checks if binary tree is complete
+ * @tree: Pointer type of node tree
+ * Return: 1 if complete, 0 is not
  */
 int binary_tree_is_complete(const binary_tree_t *tree)
 {
-fifo_t *head, *tail;
-binary_tree_t *node;
-head = tail = NULL;
-if (tree == NULL)
-return (0);
-push(&head, &tail, tree);
-while (head)
-{
-node = (binary_tree_t *) pop(&head, &tail);
-if (node)
-{
-push(&head, &tail, (const binary_tree_t *) node->left);
-push(&head, &tail, (const binary_tree_t *) node->right);
-if (binary_tree_leaves(node))
-{
-if (node->parent->left == NULL)
-return (0);
-}
-}
-}
-return (1);
+	link_t *head, *tail;
+	int flag = 0;
+
+	if (tree == NULL)
+	{
+		return (0);
+	}
+	head = tail = new_node((binary_tree_t *)tree);
+	if (head == NULL)
+	{
+		exit(1);
+	}
+	while (head != NULL)
+	{
+		if (head->node->left != NULL)
+		{
+			if (flag == 1)
+			{
+				free_q(head);
+				return (0);
+			}
+			_push(head->node->left, head, &tail);
+		}
+		else
+			flag = 1;
+		if (head->node->right != NULL)
+		{
+			if (flag == 1)
+			{
+				free_q(head);
+				return (0);
+			}
+			_push(head->node->right, head, &tail);
+		}
+		else
+			flag = 1;
+		_pop(&head);
+	}
+	return (1);
 }
